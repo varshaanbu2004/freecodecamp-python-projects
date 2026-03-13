@@ -1,0 +1,92 @@
+class Category:
+    def __init__(self, name):
+        self.name = name
+        self.ledger = []
+
+    def deposit(self, amount, description=""):
+        self.ledger.append({"amount": amount, "description": description})
+
+    def withdraw(self, amount, description=""):
+        if self.check_funds(amount):
+            self.ledger.append({"amount": -amount, "description": description})
+            return True
+        return False
+
+    def get_balance(self):
+        total = 0
+        for item in self.ledger:
+            total += item["amount"]
+        return total
+
+    def transfer(self, amount, category):
+        if self.check_funds(amount):
+            self.withdraw(amount, "Transfer to " + category.name)
+            category.deposit(amount, "Transfer from " + self.name)
+            return True
+        return False
+
+    def check_funds(self, amount):
+        if amount > self.get_balance():
+            return False
+        return True
+
+    def __str__(self):
+        title = self.name.center(30, "*") + "\n"
+        items = ""
+        total = 0
+        for item in self.ledger:
+            description = item["description"][:23]
+            amount = "{:.2f}".format(item["amount"])
+            items += description.ljust(23) + amount.rjust(7) + "\n"
+            total += item["amount"]
+        output = title + items + "Total: {:.2f}".format(total)
+        return output
+
+
+def create_spend_chart(categories):
+    result = "Percentage spent by category\n"
+
+    withdrawals = []
+    total = 0
+
+    for category in categories:
+        spent = 0
+        for item in category.ledger:
+            if item["amount"] < 0:
+                spent += -item["amount"]
+        withdrawals.append(spent)
+        total += spent
+
+    percentages = []
+    for spent in withdrawals:
+        percent = (spent / total) * 100
+        percent = int(percent // 10) * 10
+        percentages.append(percent)
+
+    for i in range(100, -1, -10):
+        result += str(i).rjust(3) + "| "
+        for percent in percentages:
+            if percent >= i:
+                result += "o  "
+            else:
+                result += "   "
+        result += "\n"
+
+    result += "    " + "-" * (len(categories) * 3 + 1) + "\n"
+
+    max_length = 0
+    for category in categories:
+        if len(category.name) > max_length:
+            max_length = len(category.name)
+
+    for i in range(max_length):
+        result += "     "
+        for category in categories:
+            if i < len(category.name):
+                result += category.name[i] + "  "
+            else:
+                result += "   "
+        result += "\n"
+
+    return result.rstrip("\n")
+
